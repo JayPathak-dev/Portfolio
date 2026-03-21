@@ -27,7 +27,7 @@
     --hero-g1: rgba(124,108,252,0.13);
     --hero-g2: rgba(252,108,143,0.08);
     --hero-g3: rgba(108,252,212,0.06);
-    --cursor-blend: screen;
+    --glow-shadow: rgba(124,108,252,0.25);
   }
 
   /* ── LIGHT THEME ── */
@@ -50,7 +50,7 @@
     --hero-g1: rgba(90,79,224,0.1);
     --hero-g2: rgba(224,48,106,0.06);
     --hero-g3: rgba(10,146,114,0.05);
-    --cursor-blend: multiply;
+    --glow-shadow: rgba(90,79,224,0.2);
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -61,31 +61,37 @@
     color: var(--text);
     font-family: 'DM Mono', monospace;
     overflow-x: hidden;
-    cursor: none;
+    cursor: none; /* Hide default cursor */
     transition: background 0.4s, color 0.4s;
   }
 
-  /* ── CURSOR ── */
+  /* ── SIMPLE ELEGANT CURSOR ── */
   #cursor {
-    width: 10px; height: 10px;
+    width: 12px; height: 12px;
     background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
     border-radius: 50%;
     position: fixed; pointer-events: none; z-index: 9999;
     transform: translate(-50%, -50%);
-    transition: width 0.15s, height 0.15s, background 0.15s;
-    mix-blend-mode: var(--cursor-blend);
-    left: -100px; top: -100px;
+    /* Smooth transitions for size and shape, position is handled by JS instantly */
+    transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                height 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                background 0.3s, box-shadow 0.3s, border 0.3s;
+    left: 0; top: 0;
+    opacity: 0; /* Hidden until mouse moves */
   }
-  #cursor-ring {
-    width: 34px; height: 34px;
-    border: 1.5px solid rgba(124,108,252,0.4);
-    border-radius: 50%;
-    position: fixed; pointer-events: none; z-index: 9998;
-    transform: translate(-50%, -50%);
-    left: -100px; top: -100px;
-    transition: border-color 0.35s;
+
+  /* Hover state: expands into a glassmorphic ring */
+  #cursor.hover-state {
+    width: 50px; height: 50px;
+    background: rgba(124, 108, 252, 0.08);
+    border: 1px solid var(--accent);
+    box-shadow: none;
+    backdrop-filter: blur(3px);
   }
-  [data-theme="light"] #cursor-ring { border-color: rgba(90,79,224,0.3); }
+  [data-theme="light"] #cursor.hover-state {
+    background: rgba(90, 79, 224, 0.08);
+  }
 
   /* ── NOISE ── */
   body::before {
@@ -93,6 +99,17 @@
     position: fixed; inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
     pointer-events: none; z-index: 900; opacity: 0.45;
+  }
+
+  /* ── SCROLL REVEAL ANIMATIONS ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   /* ── NAV ── */
@@ -185,7 +202,13 @@
     font-size: 0.7rem; color: var(--accent);
     letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 2rem;
     transition: color 0.4s, background 0.4s, border-color 0.4s;
+    animation: float 6s ease-in-out infinite; /* Added gentle float */
   }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
   [data-theme="light"] .hero-badge { background: rgba(90,79,224,0.07); border-color: rgba(90,79,224,0.2); }
   .badge-dot { width: 6px; height: 6px; background: var(--accent3); border-radius: 50%; animation: pulse 2s infinite; transition: background 0.4s; }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.5)} }
@@ -197,7 +220,14 @@
   }
   .line1 { display: block; color: var(--text); transition: color 0.4s; }
   .line2 { display: block; color: transparent; -webkit-text-stroke: 1px var(--outline-stroke); }
-  .accent-word { color: var(--accent); transition: color 0.4s; }
+  
+  /* Upgraded Gradient Accent Word */
+  .accent-word { 
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+  }
 
   .hero-sub {
     font-size: 0.95rem; color: var(--muted);
@@ -212,9 +242,9 @@
     font-family: 'DM Mono', monospace; font-size: 0.8rem;
     letter-spacing: 0.06em; text-decoration: none;
     transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-    box-shadow: 0 0 18px rgba(124,108,252,0.25);
+    box-shadow: 0 0 18px var(--glow-shadow);
   }
-  .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 4px 24px rgba(124,108,252,0.35); }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 6px 24px var(--glow-shadow); }
   .btn-outline {
     display: inline-flex; align-items: center; gap: 0.5rem;
     background: transparent; color: var(--text);
@@ -296,22 +326,28 @@
   .project-card {
     background: var(--card); border: 1px solid var(--border); border-radius: 12px;
     padding: 1.8rem; position: relative; overflow: hidden;
-    text-decoration: none; color: inherit; display: block;
-    transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s, background 0.4s;
+    text-decoration: none; color: inherit; display: flex; flex-direction: column;
+    transition: border-color 0.3s, transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s, background 0.4s;
   }
   .project-card::before {
     content: ''; position: absolute; inset: 0;
     background: linear-gradient(135deg, rgba(124,108,252,0.05) 0%, transparent 60%);
-    opacity: 0; transition: opacity 0.3s;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
   }
-  .project-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 14px 36px var(--shadow); }
+  /* Upgraded hover effect with colored glow */
+  .project-card:hover { 
+    border-color: var(--accent); 
+    transform: translateY(-6px); 
+    box-shadow: 0 12px 30px -10px var(--glow-shadow); 
+    z-index: 10; 
+  }
   .project-card:hover::before { opacity: 1; }
   .proj-num { font-family:'Syne',sans-serif; font-size:0.68rem; color:var(--muted); letter-spacing:0.1em; margin-bottom:1rem; }
   .proj-meta { font-size:0.68rem; color:var(--accent2); letter-spacing:0.08em; margin-bottom:0.8rem; transition: color 0.4s; }
   .project-card h3 { font-family:'Syne',sans-serif; font-weight:700; font-size:1.05rem; letter-spacing:-0.01em; margin-bottom:0.7rem; }
-  .project-card p { font-size:0.8rem; color:var(--muted); line-height:1.8; margin-bottom:1.1rem; }
+  .project-card p { font-size:0.8rem; color:var(--muted); line-height:1.8; margin-bottom:1.1rem; flex-grow: 1; }
   .proj-dot { position:absolute; top:1.4rem; right:1.4rem; width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); transition: background 0.4s; }
-  .proj-arrow { position:absolute; bottom:1.4rem; right:1.4rem; color:var(--muted); font-size:1.1rem; transition:color 0.2s,transform 0.2s; }
+  .proj-arrow { position:absolute; bottom:1.8rem; right:1.8rem; color:var(--muted); font-size:1.2rem; transition:color 0.2s,transform 0.2s; }
   .project-card:hover .proj-arrow { color:var(--accent); transform:translate(3px,-3px); }
 
   /* ── TIMELINE ── */
@@ -333,9 +369,13 @@
     background: var(--card); border: 1px solid var(--border); border-radius: 10px;
     padding: 1.4rem; display: flex; align-items: flex-start; gap: 1rem;
     position: relative; text-decoration: none; color: inherit;
-    transition: border-color 0.2s, transform 0.15s, background 0.4s;
+    transition: border-color 0.3s, transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s, background 0.4s;
   }
-  .cert-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .cert-card:hover { 
+    border-color: var(--accent); 
+    transform: translateY(-3px); 
+    box-shadow: 0 8px 20px -8px var(--glow-shadow); 
+  }
   .cert-icon {
     width: 38px; height: 38px; background: rgba(124,108,252,0.1);
     border-radius: 8px; display: flex; align-items: center; justify-content: center;
@@ -356,9 +396,12 @@
     border-left: 3px solid var(--accent2); border-radius: 0 10px 10px 0;
     padding: 1.1rem 1.4rem; display: flex; align-items: center; gap: 1.1rem;
     font-size: 0.86rem; text-decoration: none; color: inherit;
-    transition: transform 0.15s, background 0.4s, border-color 0.4s;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s, background 0.4s, border-color 0.4s;
   }
-  .ach-item:hover { transform: translateX(4px); }
+  .ach-item:hover { 
+    transform: translateX(6px); 
+    box-shadow: -4px 4px 15px -5px rgba(252,108,143,0.15); /* colored shadow specific to ach items */
+  }
   .ach-badge {
     font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.68rem;
     color: var(--accent); border: 1px solid rgba(124,108,252,0.3);
@@ -394,9 +437,14 @@
     display: flex; align-items: center; gap: 1rem; color: var(--text);
     text-decoration: none; font-size: 0.84rem; padding: 0.95rem 1.3rem;
     background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-    transition: border-color 0.2s, transform 0.15s, color 0.2s, background 0.4s;
+    transition: border-color 0.3s, transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), color 0.3s, background 0.4s, box-shadow 0.3s;
   }
-  .contact-link:hover { border-color: var(--accent); color: var(--accent); transform: translateX(4px); }
+  .contact-link:hover { 
+    border-color: var(--accent); 
+    color: var(--accent); 
+    transform: translateX(6px); 
+    box-shadow: -4px 4px 15px -5px var(--glow-shadow); 
+  }
   .cl-icon {
     font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.6rem;
     color: var(--accent); background: rgba(124,108,252,0.1);
@@ -431,9 +479,7 @@
 <body>
 
 <div id="cursor"></div>
-<div id="cursor-ring"></div>
 
-<!-- NAV -->
 <nav>
   <a href="#hero" class="nav-logo">J<span>.</span>P</a>
   <ul class="nav-links">
@@ -452,11 +498,10 @@
   </div>
 </nav>
 
-<!-- HERO -->
 <section id="hero">
   <div class="hero-bg"></div>
   <div class="hero-grid"></div>
-  <div class="hero-content">
+  <div class="hero-content reveal">
     <div class="hero-badge"><div class="badge-dot"></div>Available for opportunities</div>
     <h1>
       <span class="line1">Jay <span class="accent-word">Pathak</span></span>
@@ -471,7 +516,6 @@
   <div class="scroll-hint"><div class="scroll-line"></div>Scroll</div>
 </section>
 
-<!-- MARQUEE -->
 <div class="marquee-wrap">
   <div class="marquee-track">
     <span class="mhi">Python</span> · C++ · Java · Machine Learning · TensorFlow · XGBoost · NLP · Streamlit · Unity · Git · MySQL ·
@@ -479,7 +523,6 @@
   </div>
 </div>
 
-<!-- ABOUT -->
 <section id="about" class="sec">
   <div class="sec-label">01 — About</div>
   <div class="about-grid">
@@ -492,14 +535,13 @@
     </div>
     <div class="about-stats">
       <div class="stat-box"><div class="stat-num">8.52</div><div class="stat-label">CGPA</div></div>
-      <div class="stat-box"><div class="stat-num">2+</div><div class="stat-label">ML Projects</div></div>
+      <div class="stat-box"><div class="stat-num">3+</div><div class="stat-label">Projects</div></div>
       <div class="stat-box"><div class="stat-num">200+</div><div class="stat-label">LeetCode</div></div>
-      <div class="stat-box"><div class="stat-num">4+</div><div class="stat-label">Certificates</div></div>
+      <div class="stat-box"><div class="stat-num">5+</div><div class="stat-label">Certificates</div></div>
     </div>
   </div>
 </section>
 
-<!-- SKILLS -->
 <section id="skills" class="sec">
   <div class="sec-label">02 — Skills</div>
   <h2>Tech Stack &amp; Competencies</h2>
@@ -508,7 +550,7 @@
     <div>
       <div class="skill-cat-title">Languages</div>
       <div class="tags">
-        <span class="tag hl">C++</span><span class="tag hl">Java</span><span class="tag hl">Python</span>
+        <span class="tag hl">C++</span><span class="tag hl">Java</span><span class="tag hl">Python</span><span class="tag hl">C#</span>
         <span class="tag">C</span><span class="tag">HTML</span><span class="tag">CSS</span>
       </div>
     </div>
@@ -523,7 +565,7 @@
     <div>
       <div class="skill-cat-title">Frameworks &amp; Tools</div>
       <div class="tags">
-        <span class="tag hl">Streamlit</span><span class="tag">Flask</span><span class="tag">Unity</span>
+        <span class="tag hl">Streamlit</span><span class="tag hl">Unity</span><span class="tag">Flask</span>
         <span class="tag">Git &amp; GitHub</span><span class="tag">Postman</span><span class="tag">MySQL</span>
         <span class="tag">Google Colab</span><span class="tag">Jupyter Notebook</span><span class="tag">VS Code</span>
       </div>
@@ -534,23 +576,15 @@
         <span class="tag">Data Structures &amp; Algorithms</span><span class="tag">OOP</span><span class="tag">Problem Solving</span>
       </div>
     </div>
-    <div>
-      <div class="skill-cat-title">Soft Skills</div>
-      <div class="tags">
-        <span class="tag">Leadership</span><span class="tag">Analytical Thinking</span>
-        <span class="tag">Adaptability</span><span class="tag">Effective Communication</span>
-      </div>
-    </div>
   </div>
 </section>
 
-<!-- PROJECTS -->
 <section id="projects" class="sec">
   <div class="sec-label">03 — Projects</div>
   <h2>Featured Work</h2>
   <br><br>
   <div class="projects-grid">
-    <a href="https://github.com/JayPathak-dev" target="_blank" class="project-card">
+    <a href="https://telemedicine-feedback-sentiment-analysis.streamlit.app/" target="_blank" class="project-card">
       <div class="proj-dot"></div>
       <div class="proj-num">01</div>
       <div class="proj-meta">Dec 2025 &nbsp;·&nbsp; NLP / Deep Learning</div>
@@ -558,16 +592,16 @@
       <p>BiLSTM sentiment classifier achieving ~85% validation accuracy on 22K+ samples. Advanced NLP preprocessing — lemmatization, negation preservation, noise reduction. Interactive Streamlit dashboard for real-time single and bulk sentiment analysis.</p>
       <div class="tags">
         <span class="tag">Python</span><span class="tag">TensorFlow</span>
-        <span class="tag">BiLSTM</span><span class="tag">NLTK</span>
-        <span class="tag">Streamlit</span><span class="tag">Scikit-learn</span>
+        <span class="tag">BiLSTM</span><span class="tag">Streamlit</span>
       </div>
       <div class="proj-arrow">↗</div>
     </a>
+    
     <a href="https://github.com/JayPathak-dev" target="_blank" class="project-card">
       <div class="proj-dot" style="background:var(--accent2);box-shadow:0 0 8px var(--accent2)"></div>
       <div class="proj-num">02</div>
       <div class="proj-meta">Apr 2025 &nbsp;·&nbsp; ML / Sustainability</div>
-      <h3>SolarECO — Solar Panel Efficiency Prediction</h3>
+      <h3>SolarECO — Solar Efficiency Prediction</h3>
       <p>XGBoost regression model for solar efficiency prediction based on environmental datasets. Recommendation pipeline and AI chatbot for user decision support. Web interface enabling dynamic efficiency analysis and visualization.</p>
       <div class="tags">
         <span class="tag">Python</span><span class="tag">XGBoost</span>
@@ -575,10 +609,22 @@
       </div>
       <div class="proj-arrow">↗</div>
     </a>
+
+    <a href="https://jaypathak-dev.itch.io/remember-the-color-game" target="_blank" class="project-card">
+      <div class="proj-dot" style="background:var(--accent3);box-shadow:0 0 8px var(--accent3)"></div>
+      <div class="proj-num">03</div>
+      <div class="proj-meta">Jul 2025 &nbsp;·&nbsp; Game Development</div>
+      <h3>Remember the Color Game</h3>
+      <p>An interactive memory and puzzle game built utilizing the Unity Engine. Designed core game mechanics, implemented gameplay logic via C# scripting, and focused on creating an engaging and fluid user experience.</p>
+      <div class="tags">
+        <span class="tag">Unity</span><span class="tag">C#</span>
+        <span class="tag">Game Design</span>
+      </div>
+      <div class="proj-arrow">↗</div>
+    </a>
   </div>
 </section>
 
-<!-- TRAINING -->
 <section id="training" class="sec">
   <div class="sec-label">04 — Training &amp; Extras</div>
   <h2>Experience &amp; Community</h2>
@@ -618,28 +664,32 @@
   </div>
 </section>
 
-<!-- CERTIFICATES -->
 <section id="certificates" class="sec">
   <div class="sec-label">05 — Certificates</div>
   <h2>Credentials</h2>
   <br><br>
   <div class="certs-grid">
-    <a href="https://www.coursera.org/learn/machine-learning-with-python" target="_blank" class="cert-card">
+    <a href="https://drive.google.com/file/d/12vawT-IzXT81Ay-VEnM9QygDaDCfLY9l/view?usp=drive_link" target="_blank" class="cert-card">
+      <div class="cert-icon">SEC</div>
+      <div class="cert-info"><h4>Privacy and Security in Online Social Media</h4><p>NPTEL — October 2025</p></div>
+      <span class="cert-arrow">↗</span>
+    </a>
+    <a href="https://www.coursera.org/account/accomplishments/verify/ZJ9HLXGJZ1YG" target="_blank" class="cert-card">
       <div class="cert-icon">ML</div>
       <div class="cert-info"><h4>Machine Learning with Python</h4><p>IBM · Coursera — September 2025</p></div>
       <span class="cert-arrow">↗</span>
     </a>
-    <a href="https://cipherschools.com" target="_blank" class="cert-card">
+    <a href="https://www.cipherschools.com/certificate/preview?id=687e45977efd6d5090703e1d" target="_blank" class="cert-card">
       <div class="cert-icon">GD</div>
       <div class="cert-info"><h4>Game Dev with Unity &amp; C#</h4><p>Cipher School — July 2025</p></div>
       <span class="cert-arrow">↗</span>
     </a>
-    <a href="https://nptel.ac.in" target="_blank" class="cert-card">
+    <a href="https://drive.google.com/file/d/1_SmNnj2iCYfu3r3Yrg18av3vfohuLjS4/view?usp=sharing" target="_blank" class="cert-card">
       <div class="cert-icon">CC</div>
       <div class="cert-info"><h4>Cloud Computing</h4><p>NPTEL — April 2025</p></div>
       <span class="cert-arrow">↗</span>
     </a>
-    <a href="https://www.coursera.org/learn/introduction-to-generative-ai" target="_blank" class="cert-card">
+    <a href="https://www.coursera.org/account/accomplishments/verify/6LDVEBVBD2B8" target="_blank" class="cert-card">
       <div class="cert-icon">AI</div>
       <div class="cert-info"><h4>Introduction to Generative AI</h4><p>Coursera — June 2024</p></div>
       <span class="cert-arrow">↗</span>
@@ -647,7 +697,6 @@
   </div>
 </section>
 
-<!-- ACHIEVEMENTS -->
 <section id="achievements" class="sec">
   <div class="sec-label">06 — Achievements</div>
   <h2>Recognition</h2>
@@ -668,7 +717,6 @@
   </div>
 </section>
 
-<!-- EDUCATION -->
 <section id="education" class="sec">
   <div class="sec-label">07 — Education</div>
   <h2>Academic Background</h2>
@@ -689,7 +737,6 @@
   </div>
 </section>
 
-<!-- CONTACT -->
 <section id="contact" class="sec">
   <div class="sec-label">08 — Contact</div>
   <div class="contact-top">
@@ -715,7 +762,7 @@
 </section>
 
 <footer>
-  <span>© 2025 Jay Pathak. All rights reserved.</span>
+  <span>© 2026 Jay Pathak. All rights reserved.</span>
   <span style="color:var(--accent);transition:color 0.4s;">Built with HTML · CSS · JS</span>
 </footer>
 
@@ -735,23 +782,41 @@
     knob.textContent = next === 'dark' ? '🌙' : '☀️';
   });
 
-  // ── CURSOR ──
-  const cur = document.getElementById('cursor');
-  const ring = document.getElementById('cursor-ring');
-  let mx = -200, my = -200, rx = -200, ry = -200;
+  // ── NEW SMOOTH CURSOR ──
+  const cursor = document.getElementById('cursor');
+  
+  let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+  let cx = mx, cy = my;
 
-  document.addEventListener('mousemove', function(e) { mx = e.clientX; my = e.clientY; });
+  // Reveal cursor on first mouse move to prevent it sitting in corner
+  document.addEventListener('mousemove', function(e) { 
+    if (cursor.style.opacity == 0 || cursor.style.opacity === "") {
+        cursor.style.opacity = 1;
+    }
+    mx = e.clientX; 
+    my = e.clientY; 
+  });
 
   (function loop() {
-    cur.style.left = mx + 'px'; cur.style.top = my + 'px';
-    rx += (mx - rx) * 0.13; ry += (my - ry) * 0.13;
-    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    // Smooth trailing effect (0.2 interpolation factor)
+    cx += (mx - cx) * 0.2;
+    cy += (my - cy) * 0.2;
+    
+    // Apply position instantly via transform for maximum performance
+    cursor.style.transform = `translate(calc(${cx}px - 50%), calc(${cy}px - 50%))`;
+    
     requestAnimationFrame(loop);
   })();
 
-  document.querySelectorAll('a, button').forEach(function(el) {
-    el.addEventListener('mouseenter', function() { cur.style.width='18px'; cur.style.height='18px'; cur.style.background='var(--accent2)'; });
-    el.addEventListener('mouseleave', function() { cur.style.width='10px'; cur.style.height='10px'; cur.style.background='var(--accent)'; });
+  // Cursor states for interactive elements
+  const interactables = document.querySelectorAll('a, button');
+  interactables.forEach(function(el) {
+    el.addEventListener('mouseenter', function() { 
+      cursor.classList.add('hover-state'); 
+    });
+    el.addEventListener('mouseleave', function() { 
+      cursor.classList.remove('hover-state'); 
+    });
   });
 
   // ── TYPING ──
@@ -765,6 +830,26 @@
     setTimeout(type, del ? 55 : 95);
   }
   setTimeout(type, 1000);
+
+  // ── SCROLL REVEAL ANIMATIONS ──
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.sec').forEach(sec => {
+    sec.classList.add('reveal');
+    observer.observe(sec);
+  });
+  
+  // Hero load reveal
+  window.addEventListener('load', () => {
+    document.querySelector('.hero-content').classList.add('active');
+  });
+
 </script>
 </body>
 </html>
